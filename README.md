@@ -15,7 +15,7 @@ In this workshop we'll learn how to build cloud-enabled web applications with An
 
 ## Pre-requisites
 
-- Node: `11.13.0`. Visit [Node](https://nodejs.org/en/download/)
+- Node: `12.6.0`. Visit [Node](https://nodejs.org/en/download/)
 - npm: `6.9.0`. Packaged with Node otherwise run upgrade
 
 ```bash
@@ -55,22 +55,19 @@ Add type definitions for __Node__ by changing `tsconfig.app.json`. This is a req
 Add the following code, to the top of `src/polyfills.ts`. This is a requirement for Angular 6+.
 
 ```js
-declare global {
-  interface Window { 
-    global: any; 
-    process: any;
-  }
-}
-window.global = window;
-window.process = {};
+(window as any).global = window;
+
+(window as any).process = {
+  env: { DEBUG: undefined }
+};
 ```
 
 ## Installing the CLI & Initializing a new AWS Amplify Project
 
-Let's now install the AWS Amplify & AWS Amplify Angular libraries:
+Let's now install the AWS Amplify API & AWS Amplify Angular library:
 
 ```bash
-npm install --save aws-amplify aws-amplify-angular
+npm install --save @aws-amplify/auth aws-amplify-angular
 ```
 
 ### Installing the AWS Amplify CLI
@@ -132,7 +129,7 @@ Now, the AWS Amplify CLI has iniatilized a new project & you will see a new fold
 
 ## Adding Authentication
 
-To add authentication, we can use the following command:
+To add authentication to our Amplify project, we can use the following command:
 
 ```sh
 amplify add auth
@@ -141,8 +138,11 @@ amplify add auth
 > When prompted choose 
 - Do you want to use default authentication and security configuration?: __Default configuration__
 - How do you want users to be able to sign in when using your Cognito User Pool?: __Username__
-- What attributes are required for signing up? (Press <space> to select, to toggle all, to
-invert selection): __Email__
+- Do you want to configure advanced settings? __Yes, I want to make some additional changes.__
+- What attributes are required for signing up? (Press <space> to select, <a> to 
+toggle all, <i> to invert selection): __Email__
+- Do you want to enable any of the following capabilities? (Press <space> to sel
+ect, <a> to toggle all, <i> to invert selection): __None__
 
 Now, we'll run the push command and the cloud resources will be created in our AWS account.
 
@@ -167,9 +167,9 @@ The first thing we need to do is to configure our Angular application to be awar
 To configure the app, open __main.ts__ and add the following code below the last import:
 
 ```js
-import Amplify from 'aws-amplify';
+import API from '@aws-amplify/auth';
 import amplify from './aws-exports';
-Amplify.configure(amplify);
+API.configure(amplify);
 ```
 
 Now, our app is ready to start using our AWS services.
@@ -268,7 +268,7 @@ To do this, we could create a form like:
 We'd also need to have a method that signed up & signed in users. We can us the Auth class to do this. The Auth class has over 30 methods including things like `signUp`, `signIn`, `confirmSignUp`, `confirmSignIn`, & `forgotPassword`. These functions return a promise so they need to be handled asynchronously.
 
 ```js
-import { Auth } from 'aws-amplify';
+import Auth from '@aws-amplify/auth';
 
 export class SignupComponent implements OnInit {
   public signup: FormGroup;
