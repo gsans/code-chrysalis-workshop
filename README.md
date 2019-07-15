@@ -141,8 +141,7 @@ amplify add auth
 - Do you want to configure advanced settings? __Yes, I want to make some additional changes.__
 - What attributes are required for signing up? (Press <space> to select, <a> to 
 toggle all, <i> to invert selection): __Email__
-- Do you want to enable any of the following capabilities? (Press <space> to sel
-ect, <a> to toggle all, <i> to invert selection): __None__
+- Do you want to enable any of the following capabilities? (Press <space> to select, <a> to toggle all, <i> to invert selection): __None__
 
 Now, we'll run the push command and the cloud resources will be created in our AWS account.
 
