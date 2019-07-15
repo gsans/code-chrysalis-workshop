@@ -409,10 +409,26 @@ To do so, we need to define the query, execute the query, store the data in our 
 
 > Read more about the __Amplify GraphQL Client__ [here](https://aws-amplify.github.io/docs/js/api#amplify-graphql-client).
 
+First, we will install the AWS Amplify API and PubSub libraries:
+
+```bash
+npm install --save @aws-amplify/api @aws-amplify/pubsub
+```
+
+To configure the app, open __main.ts__ and change the initial code to configure the new dependencies:
 
 ```js
-import { API, graphqlOperation } from 'aws-amplify';
-import { listRestaurants } from '../graphql/queries';
+import Auth from '@aws-amplify/auth';
+import API from '@aws-amplify/api';
+import PubSub from '@aws-amplify/pubsub';
+import amplify from './aws-exports';
+Auth.configure(amplify);
+API.configure(amplify);
+PubSub.configure(amplify);
+```
+
+```js
+import { APIService } from '../API.service';
 import { Restaurant } from './types/restaurant';
 
 @Component({
@@ -425,10 +441,11 @@ import { Restaurant } from './types/restaurant';
 })
 export class AppComponent implements OnInit {
   restaurants: Array<Restaurant>;
-
-  async ngOnInit() {
-    var response = await API.graphql(graphqlOperation(listRestaurants))
-    this.restaurants = (response as any).data.listRestaurants.items;
+  constructor(public api: APIService) { }
+  ngOnInit() {
+    this.api.ListRestaurants().then(data => {
+      this.restaurants = data.items;
+    });
   }
 }
 ```
@@ -453,22 +470,19 @@ export class HomeComponent implements OnInit {
       'description': ['', Validators.required],
       'city': ['', Validators.required]
     });
-    var response = await API.graphql(graphqlOperation(listRestaurants));
-    this.restaurants = (response as any).data.listRestaurants.items;
+    this.api.ListRestaurants().then(event => {
+      this.restaurants = event.items;
+    });
   } 
   
-  public async onCreate(restaurant: any) {
-    try {
-      await API.graphql(graphqlOperation(createRestaurant, {
-        input: restaurant
-      }));
+  public onCreate(restaurant: any) {
+    this.api.CreateRestaurant(restaurant).then(event => {
       console.log('item created!');
-      this.restaurants = [restaurant, ...this.restaurants];
       this.createForm.reset();
-    } 
-    catch (e) {
+    })
+    .catch(e => {
       console.log('error creating restaurant...', e);
-    }
+    });
   }
 }
 ```
@@ -477,24 +491,15 @@ export class HomeComponent implements OnInit {
 
 Next, let's see how we can create a subscription to subscribe to changes of data in our API.
 
-To do so, we need to define the subscription, listen for the subscription, & update the state whenever a new piece of data comes in through the subscription.
+To do so, we need to listen to the subscription, & update the state whenever a new piece of data comes in through the subscription.
 
 ```js
-import * as Observable from 'zen-observable';
-import { onCreateRestaurant } from '../../graphql/subscriptions';
-
 @Component(...)
 export class HomeComponent implements OnInit {
   ngOnInit() {
-    var subscription = API.graphql(
-      graphqlOperation(onCreateRestaurant)
-    ) as Observable<object>;
-    
-    subscription.subscribe({
-      next: (sourceData) => {
-        const newRestaurant = (sourceData as any).value.data.onCreateRestaurant
-        this.restaurants = [newRestaurant, ...this.restaurants];
-      }
+    this.api.OnCreateRestaurantListener.subscribe(event => {
+      const newRestaurant = event.value.data.onCreateRestaurant;
+      this.restaurants = [newRestaurant, ...this.restaurants];
     });
   }
 }
